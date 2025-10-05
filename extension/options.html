@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Policy Prism Settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main class="options">
+    <header>
+      <h1>Policy Prism Settings</h1>
+      <p>Configure carrier coverage, automation behaviour, and future service endpoints.</p>
+    </header>
+
+    <section>
+      <h2>Status</h2>
+      <div id="status"></div>
+    </section>
+
+    <section>
+      <h2>Carriers</h2>
+      <p>Select which carrier portals should activate the insight panel.</p>
+      <div id="carriers" class="carrier-grid"></div>
+    </section>
+
+    <section>
+      <h2>Developer Hooks</h2>
+      <label class="field">
+        <span>MedLM endpoint (placeholder)</span>
+        <input id="endpoint" type="url" placeholder="https://api.your-backend/prism/summarise" disabled />
+        <small>Backend connector not yet implemented – track in roadmap.</small>
+      </label>
+    </section>
+
+    <section class="actions">
+      <button id="reset" type="button">Reset to defaults</button>
+    </section>
+  </main>
+  <script src="options.js" type="module"></script>
+</body>
+</html>

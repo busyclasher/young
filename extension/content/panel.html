@@ -1,0 +1,42 @@
+<div class="pp-container" data-pp-root>
+  <header class="pp-header">
+    <div>
+      <span class="pp-title">Policy Prism</span>
+      <span class="pp-badge">Prototype</span>
+    </div>
+    <div class="pp-controls">
+      <button type="button" data-pp-action="refresh" title="Re-run analysis">?</button>
+      <button type="button" data-pp-action="collapse" title="Collapse panel">?</button>
+    </div>
+  </header>
+  <section class="pp-body" data-pp-section="body">
+    <div class="pp-status" data-pp-status>
+      <span class="pp-spinner"></span>
+      <span class="pp-status-message">Preparing policy insights…</span>
+    </div>
+    <article class="pp-summary" data-pp-summary hidden>
+      <h2>Unified Summary</h2>
+      <p class="pp-summary-text"></p>
+    </article>
+    <article class="pp-section" data-pp-highlights hidden>
+      <h3>Key Terms & Riders</h3>
+      <ul class="pp-list" data-pp-list="highlights"></ul>
+    </article>
+    <article class="pp-section" data-pp-exclusions hidden>
+      <h3>Exclusions & Caveats</h3>
+      <ul class="pp-list" data-pp-list="exclusions"></ul>
+    </article>
+    <article class="pp-section" data-pp-actions hidden>
+      <h3>Next Best Actions</h3>
+      <ul class="pp-list" data-pp-list="actions"></ul>
+    </article>
+    <article class="pp-section" data-pp-documents hidden>
+      <h3>Detected Documents</h3>
+      <ul class="pp-doc-list" data-pp-doc-list></ul>
+    </article>
+  </section>
+  <footer class="pp-footer">
+    <span data-pp-meta></span>
+    <button type="button" data-pp-action="expand" hidden>Expand</button>
+  </footer>
+</div>

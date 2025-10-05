@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Policy Prism</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="popup">
+    <header>
+      <h1>Policy Prism</h1>
+      <p class="subtitle">Cross-carrier policy insight co-pilot (prototype)</p>
+    </header>
+    <section>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-enabled" />
+        <span>Enable Policy Prism on supported portals</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-autorun" />
+        <span>Auto-run panel when a policy page loads</span>
+      </label>
+    </section>
+    <section>
+      <h2>Carriers</h2>
+      <ul id="carrier-list"></ul>
+    </section>
+    <footer>
+      <button id="open-options" type="button">Open settings</button>
+      <span class="version" id="extension-version"></span>
+    </footer>
+  </main>
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

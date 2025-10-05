@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "Policy Prism",
+  "version": "0.1.0",
+  "description": "Prototype summary assistant for life insurance policy documents across carrier portals.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Policy Prism"
+  },
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.prudential.com/*",
+        "https://*.metlife.com/*",
+        "https://*.aia.com/*",
+        "https://*.manulife.com/*",
+        "https://*.sunlife.com/*"
+      ],
+      "js": [
+        "content/index.js"
+      ],
+      "css": [
+        "content/panel.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["content/panel.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
