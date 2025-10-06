@@ -35,8 +35,7 @@
     }
   ],
   "background": {
-    "service_worker": "background/index.js",
-    "type": "module"
+    "service_worker": "background/index.js"
   },
   "options_page": "options.html",
   "icons": {
@@ -47,8 +46,12 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["content/panel.html"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "content/panel.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }
