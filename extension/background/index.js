@@ -1,3 +1,10 @@
+try {
+  importScripts(chrome.runtime.getURL('lib/vendor/pdfjs/pdf.min.js'));
+  importScripts(chrome.runtime.getURL('background/pdf-ingest.js'));
+} catch (error) {
+  console.warn('[PolicyPrism] pdf.js bootstrap failed', error);
+}
+
 const CARRIER_REGISTRY = [
   {
     id: 'prudential',
@@ -130,7 +137,7 @@ async function handleSummariseRequest(context = {}, sender) {
 
   const carrier = findCarrier(context);
   const baseline = buildBaselineSummary(context, carrier);
-  const heuristics = derivePortalHeuristics(context);
+  const heuristics = await derivePortalHeuristics(context);
 
   return {
     ...baseline,
@@ -169,7 +176,7 @@ function buildBaselineSummary(context, carrier) {
   };
 }
 
-function derivePortalHeuristics(context = {}) {
+async function derivePortalHeuristics(context = {}) {
   const docLinks = context.docLinks ?? [];
   const docSummaries = docLinks.map((href) => ({
     href,
@@ -178,11 +185,14 @@ function derivePortalHeuristics(context = {}) {
   }));
 
   const highlights = [];
-  const exclusions = [];
-  const actions = [];
+  const exclusions = ['Automated exclusion detection pending entity extraction service.'];
+  const actions = [
+    'Trigger MedLM summarisation once backend connector is live.',
+    'Validate detected documents match the customer's active policy.',
+  ];
 
   if (docLinks.length === 0) {
-    highlights.push('No supporting documents detected yet — upload policy PDFs or claim invoices.');
+    highlights.push('No supporting documents detected yet - upload policy PDFs or claim invoices.');
   } else {
     highlights.push(`${docLinks.length} document${docLinks.length === 1 ? '' : 's'} ready for ingestion.`);
   }
@@ -194,9 +204,22 @@ function derivePortalHeuristics(context = {}) {
     }
   }
 
-  exclusions.push('Automated exclusion detection pending entity extraction service.');
-  actions.push('Trigger MedLM summarisation once backend connector is live.');
-  actions.push('Validate detected documents match the customer’s active policy.');
+  const pdfLinks = docLinks.filter((href) => /\.(pdf)(?:$|[?#])/i.test(href));
+  const pdfIngest = self.PolicyPrismPdfIngest;
+
+  if (pdfLinks.length) {
+    if (pdfIngest?.parsePolicyPdfFromUrl) {
+      const pdfInsights = await analysePdfDocuments(pdfLinks, docSummaries);
+      highlights.push(...pdfInsights.highlights);
+      actions.push(...pdfInsights.actions);
+      exclusions.push(...pdfInsights.warnings);
+      if (pdfLinks.length > pdfInsights.processedCount) {
+        actions.push(`Only the first ${pdfInsights.processedCount} PDF${pdfInsights.processedCount === 1 ? '' : 's'} were parsed automatically.`);
+      }
+    } else {
+      actions.push('PDF parsing runtime unavailable - reinstall the extension build.');
+    }
+  }
 
   return {
     highlights,
@@ -205,6 +228,81 @@ function derivePortalHeuristics(context = {}) {
     documents: docSummaries,
   };
 }
+const PDF_ANALYSIS_LIMIT = 2;
+
+async function analysePdfDocuments(docLinks, docSummaries) {
+  const pdfIngest = self.PolicyPrismPdfIngest;
+  const highlights = [];
+  const actions = [];
+  const warnings = [];
+  let processedCount = 0;
+
+  if (!pdfIngest?.parsePolicyPdfFromUrl) {
+    return { highlights, actions, warnings, processedCount };
+  }
+
+  const linksToProcess = docLinks.slice(0, PDF_ANALYSIS_LIMIT);
+
+  for (const href of linksToProcess) {
+    const docEntry = docSummaries.find((doc) => doc.href === href);
+    try {
+      const analysis = await pdfIngest.parsePolicyPdfFromUrl(href);
+      processedCount += 1;
+
+      if (docEntry) {
+        docEntry.pageCount = analysis.pageCount;
+        docEntry.preview = analysis.textSample;
+        docEntry.structured = {
+          fields: analysis.fields ?? [],
+          warnings: analysis.warnings ?? [],
+          actions: analysis.actions ?? [],
+          highlights: analysis.highlights ?? [],
+          riders: analysis.riders ?? [],
+          coverageSignals: analysis.coverageSignals ?? [],
+        };
+      }
+
+      const fieldMap = new Map((analysis.fields ?? []).map((item) => [item.label, item.value]));
+      const docLabel = docEntry?.name ?? getFileName(href);
+      const summaryParts = [];
+
+      if (fieldMap.get('Policy Number')) summaryParts.push(`Policy #${fieldMap.get('Policy Number')}`);
+      if (fieldMap.get('Coverage Amount')) summaryParts.push(`Coverage ${fieldMap.get('Coverage Amount')}`);
+      if (fieldMap.get('Effective Date')) summaryParts.push(`Effective ${fieldMap.get('Effective Date')}`);
+      if (analysis.coverageSignals?.length) {
+        summaryParts.push(`Signals ${analysis.coverageSignals.slice(0, 3).join(', ')}`);
+      }
+
+      if (summaryParts.length) {
+        highlights.push(`${docLabel}: ${summaryParts.join(' | ')}`);
+      } else if (analysis.highlights?.length) {
+        analysis.highlights.forEach((line) => highlights.push(`${docLabel}: ${line}`));
+      } else {
+        highlights.push(`${docLabel}: Parsed PDF successfully.`);
+      }
+
+      for (const action of analysis.actions ?? []) {
+        if (!actions.includes(action)) {
+          actions.push(action);
+        }
+      }
+
+      for (const warning of analysis.warnings ?? []) {
+        warnings.push(`${docLabel}: ${warning}`);
+      }
+    } catch (error) {
+      console.warn('[PolicyPrism] PDF parse failed', href, error);
+      const docLabel = docEntry?.name ?? getFileName(href);
+      if (docEntry) {
+        docEntry.parseError = error?.message ?? 'Failed to parse PDF.';
+      }
+      actions.push(`Unable to parse ${docLabel} automatically - review manually.`);
+    }
+  }
+
+  return { highlights, actions, warnings, processedCount };
+}
+
 
 function extractKeywords(text = '') {
   const tokens = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);

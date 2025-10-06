@@ -256,7 +256,7 @@
     }
   }
 
-  function renderDocuments(documents = []) {
+    function renderDocuments(documents = []) {
     if (!docListEl) return;
 
     const docSection = rootEl.querySelector('[data-pp-documents]');
@@ -273,19 +273,62 @@
       const li = document.createElement('li');
       li.className = 'pp-doc-item';
 
+      const header = document.createElement('div');
+      header.className = 'pp-doc-header';
+
       const anchor = document.createElement('a');
       anchor.href = doc.href;
       anchor.target = '_blank';
       anchor.rel = 'noopener';
       anchor.textContent = doc.name;
 
-      const type = document.createElement('span');
-      type.textContent = doc.type;
+      const meta = document.createElement('span');
+      meta.className = 'pp-doc-meta';
+      meta.textContent = buildDocMeta(doc);
 
-      li.appendChild(anchor);
-      li.appendChild(type);
+      header.appendChild(anchor);
+      header.appendChild(meta);
+      li.appendChild(header);
+
+      if (doc.structured?.fields?.length) {
+        const fieldList = document.createElement('ul');
+        fieldList.className = 'pp-doc-fields';
+        doc.structured.fields.slice(0, 6).forEach((field) => {
+          const item = document.createElement('li');
+          item.textContent = `${field.label}: ${field.value}`;
+          fieldList.appendChild(item);
+        });
+        li.appendChild(fieldList);
+      }
+
+      if (doc.preview) {
+        const preview = document.createElement('p');
+        preview.className = 'pp-doc-preview';
+        preview.textContent = doc.preview;
+        li.appendChild(preview);
+      }
+
+      const warningMessages = [...(doc.structured?.warnings ?? [])];
+      if (doc.parseError) {
+        warningMessages.unshift(doc.parseError);
+      }
+      if (warningMessages.length) {
+        const warning = document.createElement('div');
+        warning.className = 'pp-doc-warning';
+        warning.textContent = warningMessages.join(' | ');
+        li.appendChild(warning);
+      }
+
       docListEl.appendChild(li);
     });
+  }
+
+  function buildDocMeta(doc) {
+    const parts = [];
+    if (doc.type) parts.push(doc.type);
+    if (doc.pageCount) parts.push(`${doc.pageCount} pages`);
+    if (doc.structured?.fields?.length) parts.push(`${doc.structured.fields.length} fields`);
+    return parts.join(' | ') || 'Document';
   }
 
   function updateStatus(message, isError = false) {
