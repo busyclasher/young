@@ -204,7 +204,7 @@ async function derivePortalHeuristics(context = {}) {
     }
   }
 
-  const pdfLinks = docLinks.filter((href) => /\.(pdf)(?:$|[?#])/i.test(href));
+  const pdfLinks = [...new Set(docLinks.filter((href) => /\.(pdf)(?:$|[?#])/i.test(href)))];
   const pdfIngest = self.PolicyPrismPdfIngest;
 
   if (pdfLinks.length) {

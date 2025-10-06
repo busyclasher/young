@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   const MAX_PDF_BYTES = 15728640; // 15 MB guardrail for PDFs.
   const MAX_PAGE_SCAN = 6; // Limit pages to keep parsing responsive.
   const TEXT_SAMPLE_LENGTH = 600;

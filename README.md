@@ -1,4 +1,4 @@
-﻿# Policy Prism Extension (Prototype)
+# Policy Prism Extension (Prototype)
 
 Policy Prism is a Chromium-based browser extension prototype that helps life-insurance agents review policy documentation from multiple carriers on a single, uniform summary surface. It installs a lightweight claim-policy insight panel directly on insurer portals and orchestrates background parsing and summarisation flows.
 
